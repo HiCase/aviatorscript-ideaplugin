@@ -17,13 +17,14 @@ repositories {
     mavenLocal()
     maven {
         url "http://maven.aliyun.com/nexus/content/groups/public"
+        allowInsecureProtocol = true
     }
     mavenCentral()
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile group: 'com.googlecode.aviator', name: 'aviator', version: aviatorVersion
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    implementation group: 'com.googlecode.aviator', name: 'aviator', version: aviatorVersion
 }
 
 sourceSets {
@@ -70,22 +71,36 @@ grammarKit {
     // tag or short commit hash of Grammar-Kit to use (see link below). Default is 2020.1
     grammarKitRelease = '2020.1'
 }
-task generateJflex(type: GenerateLexer) {
-    // source flex file
-    source = "src/main/my/grammar/_MyLanguageLexer.flex"
+// task generateJflex(type: GenerateLexer) {
+//     // source flex file
+//     source = "src/main/my/grammar/_MyLanguageLexer.flex"
+//
+//     // target directory for lexer
+//     targetDir = "src/main/gen-flex/my/lang/parser"
+//
+//     // target classname, target file will be targetDir/targetClass.java
+//     targetClass = "_MyLanguageLexer"
+//
+//     // optional, path to the task-specific skeleton file. Default: none
+//     skeleton = 'src/main/my/flex/idea-flex.skeleton'
+//
+//     // if set, plugin will remove a lexer output file before generating new one. Default: false
+//     purgeOldFiles = true
+// }
 
-    // target directory for lexer
-    targetDir = "src/main/gen-flex/my/lang/parser"
+grammars {
+    myGrammar {
+        srcDir = file('src/main/my/grammar/_MyLanguageLexer.flex')
 
-    // target classname, target file will be targetDir/targetClass.java
-    targetClass = "_MyLanguageLexer"
-
-    // optional, path to the task-specific skeleton file. Default: none
-    skeleton = 'src/main/my/flex/idea-flex.skeleton'
-
-    // if set, plugin will remove a lexer output file before generating new one. Default: false
-    purgeOldFiles = true
+        lexer {
+            jflex {
+                inputDir = srcDir
+                outputDir = file('src/main/gen-flex/my/lang/parser')
+            }
+        }
+    }
 }
+
 
 task generateBnf(type: GenerateParser) {
     // source bnf file
@@ -105,7 +120,7 @@ task generateBnf(type: GenerateParser) {
 }
 
 task generateLangAndRunIde() {
-    dependsOn generateBnf, generateJflex, runIde
+    dependsOn generateBnf, grammars, runIde
 }
 
 task myBuildPlugin {
@@ -154,3 +169,7 @@ task myRun(type: JavaExec, dependsOn: 'classes') {
 //
 //    """
 //}
+
+processResources {
+    duplicatesStrategy = 'exclude'
+}
